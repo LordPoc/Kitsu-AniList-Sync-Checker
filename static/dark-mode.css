@@ -1,0 +1,91 @@
+@media (prefers-color-scheme: dark) {
+    
+    :root {
+        --dark-bg: #1a1a1a;
+        --dark-surface: #2c2c2c;
+        --dark-border: #444;
+        --dark-text-primary: #f0f0f0;
+        --dark-text-secondary: #999;
+        --dark-placeholder-bg: #333;
+    }
+
+    /* General Body Styles */
+    body {
+        background-color: var(--dark-bg);
+        color: var(--dark-text-primary);
+    }
+
+    h1, h2, h3, h4 {
+        color: var(--dark-text-primary);
+        border-bottom-color: var(--dark-border);
+    }
+    
+    h2 {
+        background-color: var(--dark-surface);
+    }
+
+    /* --- Index Page Styles --- */
+    pre, #report-summary {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        color: var(--dark-text-primary);
+    }
+
+    #progress-bar-container {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+    
+    #progress-text {
+        color: var(--dark-text-secondary);
+    }
+
+    /* --- Report Page Styles --- */
+    .item {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+    
+    .entry-header h4 {
+        color: var(--dark-text-secondary);
+    }
+
+    .cover-image-placeholder {
+        background-color: var(--dark-placeholder-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text-secondary);
+    }
+
+    .details {
+        color: var(--dark-text-primary);
+    }
+
+    .details-extra {
+        color: var(--dark-text-secondary);
+    }
+    
+    .manga-link {
+        color: #58a6ff;
+    }
+
+    .empty-section {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        color: var(--dark-text-secondary);
+    }
+    
+    .cover-image-placeholder {
+        width: 150px;
+        height: 210px;
+        border: 1px dashed #ccc;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #888;
+        background-color: #f9f9f9;
+        font-size: 0.9em;
+        margin-bottom: 15px;
+    }
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitsu-to-AniList Web Audit</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            line-height: 1.6; 
+            padding: 20px; 
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1, h2 { color: #111; }
+        pre { 
+            background: #fff; 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            max-height: 400px; 
+            overflow-y: auto; 
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+        }
+        #start-audit-btn { 
+            font-size: 1.2em; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        #start-audit-btn:hover { background-color: #0056b3; }
+        #start-audit-btn:disabled { background: #ccc; cursor: not-allowed; }
+        
+        #progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background: #eee;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        #progress-bar { 
+            width: 0%; 
+            height: 100%; 
+            background: #007bff; 
+            transition: width 0.3s ease-in-out; 
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            font-size: 0.9em;
+        }
+        #progress-text { margin-top: 8px; font-style: italic; color: #555; }
+        #report-summary { background: #f5f5f5; }
+        
+        /* This is the container for the button */
+        #report-link-container {
+            display: none; /* Starts hidden */
+            margin-top: 20px;
+            text-align: center;
+        }
+        #report-link-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #28a745;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        #report-link-btn:hover {
+            background-color: #218838;
+        }
+        
+        /* Styles for the radio buttons */
+        .media-type-selector {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .media-type-selector label {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .media-type-selector input[type="radio"] {
+            margin-right: 5px;
+            transform: scale(1.1);
+        }
+
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-mode.css') }}">
+</head>
+<body>
+    <h1>Kitsu-to-AniList Web Audit</h1>
+    
+    <div class="media-type-selector">
+        <strong>Select Media Type:</strong>
+        <label>
+            <input type="radio" name="mediaType" value="MANGA" checked>
+            Manga
+        </label>
+        <label>
+            <input type="radio" name="mediaType" value="ANIME">
+            Anime
+        </label>
+    </div>
+    
+    <button id="start-audit-btn">Start Audit</button>
+    
+    <h2>Progress</h2>
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+    <div id="progress-text">Waiting to start...</div>
+
+    <!-- This div holds the button that will appear -->
+    <div id="report-link-container">
+        <a href="/report" target="_blank" id="report-link-btn">View Full Report</a>
+    </div>
+
+    <h2>Logs</h2>
+    <pre id="logs"></pre>
+
+    <h2>Report Summary</h2>
+    <pre id="report-summary">No report generated yet.</pre>
+    
+    <!-- Link to the JavaScript file -->
+    <script src="/static/script.js"></script>
+</body>
+</html>

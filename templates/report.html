@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitsu-AniList Full {{ media_type | capitalize }} Report</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            line-height: 1.6; 
+            padding: 20px; 
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1, h2, h3 { 
+            color: #111;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 { background-color: #eee; padding: 10px 15px; border-radius: 6px; }
+
+        .report-section { margin-bottom: 40px; }
+        .item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .entry {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .entry-header { text-align: center; }
+        .entry-header h3 { font-size: 1.5em; margin-bottom: 5px; border: none; }
+        .entry-header h4 { font-size: 1em; margin-top: 0; color: #555; font-weight: normal; }
+        
+        .cover-image {
+            width: 150px;
+            height: 210px;
+            object-fit: cover;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .cover-image-placeholder {
+            width: 150px;
+            height: 210px;
+            border: 1px dashed #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            background-color: #f9f9f9;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        
+        .details { 
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+        }
+        .details-extra {
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .sync-btn {
+            padding: 10px 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        .sync-btn:hover { background-color: #0056b3; }
+        .sync-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .sync-btn.add-btn { background-color: #28a745; }
+        .sync-btn.add-btn:hover { background-color: #218838; }
+        
+        .status-ok { color: #28a745; }
+        .status-mismatch { color: #fd7e14; }
+        .status-higher { color: #dc3545; }
+
+        .media-link {
+            font-size: 0.8em;
+            color: #007bff;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        .media-link:hover { text-decoration: underline; }
+
+        .empty-section {
+            font-style: italic;
+            color: #777;
+            padding: 20px;
+            background: #fff;
+            border: 1px dashed #ddd;
+            border-radius: 6px;
+        }
+
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-mode.css') }}">
+</head>
+<body>
+    <h1>Full {{ media_type | capitalize }} Audit Report</h1>
+
+    <!-- 
+      SECTION 1: KITSU HIGHER
+    -->
+    <div class="report-section">
+        <h2>Kitsu Progress is Higher ({{ report.kitsu_higher | length }})</h2>
+        {% if report.kitsu_higher %}
+            {% for item in report.kitsu_higher %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.k_title }}</h3>
+                        <h4>(Kitsu)</h4>
+                        <a href="{{ item.k_url }}" target="_blank" class="media-link">View on Kitsu</a>
+                    </div>
+                    {% if item.k_image %}
+                        <img src="{{ item.k_image }}" alt="Kitsu Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No Kitsu Image</div>
+                    {% endif %}
+                    <div class="details status-higher">Status: {{ item.k_status }}</div>
+                    <div class="details status-higher">Progress: {{ item.k_progress }}</div>
+                    <button class="sync-btn" 
+                            data-target="anilist"
+                            data-sync-type="full"
+                            data-a-media-id="{{ item.a_media_id }}"
+                            data-status="{{ item.k_status }}"
+                            data-progress="{{ item.k_progress }}">
+                        Sync this to AniList
+                    </button>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.a_title }}</h3>
+                        <h4>(AniList)</h4>
+                        <a href="{{ item.a_url }}" target="_blank" class="media-link">View on AniList</a>
+                    </div>
+                    {% if item.a_image %}
+                        <img src="{{ item.a_image }}" alt="AniList Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No AniList Image</div>
+                    {% endif %}
+                    <div class="details">Status: {{ item.a_status }}</div>
+                    <div class="details">Progress: {{ item.a_progress }}</div>
+                    <button class="sync-btn"
+                            data-target="kitsu"
+                            data-sync-type="full"
+                            data-k-entry-id="{{ item.k_library_id }}"
+                            data-status="{{ item.a_status }}"
+                            data-progress="{{ item.a_progress }}">
+                        Sync this to Kitsu
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div>
+
+    <!-- 
+      SECTION 2: ANILIST HIGHER
+    -->
+    <div class="report-section">
+        <h2>AniList Progress is Higher ({{ report.anilist_higher | length }})</h2>
+        {% if report.anilist_higher %}
+            {% for item in report.anilist_higher %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.k_title }}</h3>
+                        <h4>(Kitsu)</h4>
+                        <a href="{{ item.k_url }}" target="_blank" class="media-link">View on Kitsu</a>
+                    </div>
+                    {% if item.k_image %}
+                        <img src="{{ item.k_image }}" alt="Kitsu Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No Kitsu Image</div>
+                    {% endif %}
+                    <div class="details">Status: {{ item.k_status }}</div>
+                    <div class="details">Progress: {{ item.k_progress }}</div>
+                    <button class="sync-btn"
+                            data-target="anilist"
+                            data-sync-type="full"
+                            data-a-media-id="{{ item.a_media_id }}"
+                            data-status="{{ item.k_status }}"
+                            data-progress="{{ item.k_progress }}">
+                        Sync this to AniList
+                    </button>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.a_title }}</h3>
+                        <h4>(AniList)</h4>
+                        <a href="{{ item.a_url }}" target="_blank" class="media-link">View on AniList</a>
+                    </div>
+                    {% if item.a_image %}
+                        <img src="{{ item.a_image }}" alt="AniList Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No AniList Image</div>
+                    {% endif %}
+                    <div class="details status-higher">Status: {{ item.a_status }}</div>
+                    <div class="details status-higher">Progress: {{ item.a_progress }}</div>
+                    <button class="sync-btn"
+                            data-target="kitsu"
+                            data-sync-type="full"
+                            data-k-entry-id="{{ item.k_library_id }}"
+                            data-status="{{ item.a_status }}"
+                            data-progress="{{ item.a_progress }}">
+                        Sync this to Kitsu
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div>
+
+    <!-- 
+      SECTION 3: STATUS MISMATCH
+    -->
+    <div class="report-section">
+        <h2>Status Mismatch ({{ report.mismatch_status | length }})</h2>
+        {% if report.mismatch_status %}
+            {% for item in report.mismatch_status %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.k_title }}</h3>
+                        <h4>(Kitsu)</h4>
+                        <a href="{{ item.k_url }}" target="_blank" class="media-link">View on Kitsu</a>
+                    </div>
+                    {% if item.k_image %}
+                        <img src="{{ item.k_image }}" alt="Kitsu Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No Kitsu Image</div>
+                    {% endif %}
+                    <div class="details status-mismatch">Status: {{ item.k_status }}</div>
+                    <div class="details">Progress: {{ item.k_progress }}</div>
+                    <button class="sync-btn"
+                            data-target="anilist"
+                            data-sync-type="status"
+                            data-a-media-id="{{ item.a_media_id }}"
+                            data-status="{{ item.k_status }}">
+                        Use Kitsu Status
+                    </button>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.a_title }}</h3>
+                        <h4>(AniList)</h4>
+                        <a href="{{ item.a_url }}" target="_blank" class="media-link">View on AniList</a>
+                    </div>
+                    {% if item.a_image %}
+                        <img src="{{ item.a_image }}" alt="AniList Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No AniList Image</div>
+                    {% endif %}
+                    <div class="details status-mismatch">Status: {{ item.a_status }}</div>
+                    <div class="details">Progress: {{ item.a_progress }}</div>
+                    <button class="sync-btn"
+                            data-target="kitsu"
+                            data-sync-type="status"
+                            data-k-entry-id="{{ item.k_library_id }}"
+                            data-status="{{ item.a_status }}">
+                        Use AniList Status
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div>
+
+    <!-- 
+      SECTION 4: FOUND ON ANILIST (Missing from Kitsu)
+    -->
+    <div class="report-section">
+        <h2>Found on AniList DB (Not in your AniList Library) ({{ report.found_on_anilist | length }})</h2>
+        {% if report.found_on_anilist %}
+            {% for item in report.found_on_anilist %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.k_title }}</h3>
+                        <h4>(Kitsu)</h4>
+                        <a href="{{ item.k_url }}" target="_blank" class="media-link">View on Kitsu</a>
+                    </div>
+                    {% if item.k_image %}
+                        <img src="{{ item.k_image }}" alt="Kitsu Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No Kitsu Image</div>
+                    {% endif %}
+                    <div class="details status-ok">Status: {{ item.k_status }}</div>
+                    <div class="details status-ok">Progress: {{ item.k_progress }}</div>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.a_title }}</h3>
+                        <h4>(AniList Match)</h4>
+                        <a href="{{ item.a_url }}" target="_blank" class="media-link">View on AniList</a>
+                    </div>
+                    {% if item.a_image %}
+                        <img src="{{ item.a_image }}" alt="AniList Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No AniList Image</div>
+                    {% endif %}
+                    <div class="details-extra">This {{ media_type }} was found in the AniList database.</div>
+                    
+                    <button class="sync-btn add-btn"
+                            data-target="anilist"
+                            data-sync-type="add"
+                            data-a-media-id="{{ item.a_media_id }}"
+                            data-status="{{ item.k_status }}"
+                            data-progress="{{ item.k_progress }}">
+                        Add to AniList
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div>
+
+    <!-- 
+      SECTION 5: FOUND ON KITSU (Missing from Kitsu)
+    -->
+    <div class="report-section">
+        <h2>Found on Kitsu DB (Not in your Kitsu Library) ({{ report.found_on_kitsu | length }})</h2>
+        {% if report.found_on_kitsu %}
+            {% for item in report.found_on_kitsu %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.k_title }}</h3>
+                        <h4>(Kitsu Match)</h4>
+                        <a href="{{ item.k_url }}" target="_blank" class="media-link">View on Kitsu</a>
+                    </div>
+                    {% if item.k_image %}
+                        <img src="{{ item.k_image }}" alt="Kitsu Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No Kitsu Image</div>
+                    {% endif %}
+                    <div class="details-extra">This {{ media_type }} was found in the Kitsu database.</div>
+
+                    <button class="sync-btn add-btn"
+                            data-target="kitsu"
+                            data-sync-type="add"
+                            data-k-media-id="{{ item.k_media_id }}"
+                            data-media-type="{{ item.media_type }}"
+                            data-status="{{ item.a_status }}"
+                            data-progress="{{ item.a_progress }}">
+                        Add to Kitsu
+                    </button>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.a_title }}</h3>
+                        <h4>(AniList)</h4>
+                        <a href="{{ item.a_url }}" target="_blank" class="media-link">View on AniList</a>
+                    </div>
+                    {% if item.a_image %}
+                        <img src="{{ item.a_image }}" alt="AniList Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No AniList Image</div>
+                    {% endif %}
+                    <div class="details status-ok">Status: {{ item.a_status }}</div>
+                    <div class="details status-ok">Progress: {{ item.a_progress }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div>
+
+    <!-- 
+      SECTION 6: NOT FOUND ON ANILIST
+    -->
+    <div class="report-section">
+        <h2>Not Found on AniList ({{ report.not_found_on_anilist | length }})</h2>
+        {% if report.not_found_on_anilist %}
+            {% for item in report.not_found_on_anilist %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.k_title }}</h3>
+                        <h4>(Kitsu)</h4>
+                        <a href="{{ item.k_url }}" target="_blank" class="media-link">View on Kitsu</a>
+                    </div>
+                    {% if item.k_image %}
+                        <img src="{{ item.k_image }}" alt="Kitsu Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No Kitsu Image</div>
+                    {% endif %}
+                    <div class="details status-ok">Status: {{ item.k_status }}</div>
+                    <div class="details status-ok">Progress: {{ item.k_progress }}</div>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>(Not Found)</h3>
+                        <h4>(AniList)</h4>
+                    </div>
+                    <div class="cover-image-placeholder">No match found on AniList database.</div>
+                    <div class="details-extra">This may need to be added to AniList manually.</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div>
+
+    <!-- 
+      SECTION 7: NOT FOUND ON KITSU
+    -->
+    <div class="report-section">
+        <h2>Not Found on Kitsu ({{ report.not_found_on_kitsu | length }})</h2>
+        {% if report.not_found_on_kitsu %}
+            {% for item in report.not_found_on_kitsu %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>(Not Found)</h3>
+                        <h4>(Kitsu)</h4>
+                    </div>
+                    <div class="cover-image-placeholder">No match found on Kitsu database.</div>
+                    <div class="details-extra">This may need to be added to Kitsu manually.</div>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.a_title }}</h3>
+                        <h4>(AniList)</h4>
+                        <a href="{{ item.a_url }}" target="_blank" class="media-link">View on AniList</a>
+                    </div>
+                    {% if item.a_image %}
+                        <img src="{{ item.a_image }}" alt="AniList Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No AniList Image</div>
+                    {% endif %}
+                    <div class="details status-ok">Status: {{ item.a_status }}</div>
+                    <div class="details status-ok">Progress: {{ item.a_progress }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div>
+
+    <!-- 
+      SECTION 8: IN SYNC
+    -->
+    <!-- <div class="report-section">
+        <h2>In Sync ({{ report.ok | length }})</h2>
+        {% if report.ok %}
+            {% for item in report.ok %}
+            <div class="item">
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.k_title }}</h3>
+                        <h4>(Kitsu)</h4>
+                        <a href="{{ item.k_url }}" target="_blank" class="media-link">View on Kitsu</a>
+                    </div>
+                    {% if item.k_image %}
+                        <img src="{{ item.k_image }}" alt="Kitsu Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No Kitsu Image</div>
+                    {% endif %}
+                    <div class="details status-ok">Status: {{ item.k_status }}</div>
+                    <div class="details status-ok">Progress: {{ item.k_progress }}</div>
+                </div>
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3>{{ item.a_title }}</h3>
+                        <h4>(AniList)</h4>
+                        <a href="{{ item.a_url }}" target="_blank" class="media-link">View on AniList</a>
+                    </div>
+                    {% if item.a_image %}
+                        <img src="{{ item.a_image }}" alt="AniList Cover" class="cover-image">
+                    {% else %}
+                        <div class="cover-image-placeholder">No AniList Image</div>
+                    {% endif %}
+                    <div class="details status-ok">Status: {{ item.a_status }}</div>
+                    <div class="details status-ok">Progress: {{ item.a_progress }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-section">(None)</p>
+        {% endif %}
+    </div> -->
+
+    <script src="/static/report.js"></script>
+</body>
+</html>
