@@ -2,7 +2,7 @@
 
 A small Flask web app that compares your Kitsu and AniList anime/manga libraries, shows mismatches (status/progress/missing items), and lets you sync individual entries to keep both sides aligned.
 
-> **Unofficial tool.** This project uses the public AniList GraphQL API and the Kitsu JSON:API but is not affiliated with either service. Use at your own risk.
+> **Unofficial tool.** This project uses the public AniList GraphQL API and the Kitsu JSON:API but is not affiliated with either service. This tool was made with AI assistants use at your own risk.
 
 ---
 
@@ -31,13 +31,8 @@ cd Kitsu-AniList-Sync-Checker
 python -m venv venv
 # macOS / Linux / WSL
 source venv/bin/activate
-# Windows (PowerShell)
-venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-cp .env.example .env     # or copy manually on Windows
-python app.py
-
-# Then open: http://127.0.0.1:5000/
+cp .env.example .env
 ```
 
 Requirements
